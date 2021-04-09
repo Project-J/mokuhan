@@ -39,7 +39,10 @@
         (cond-> x (proto/found-key? x) #?(:clj (.value) :cljs (.-value)))
         (recur candidates)))))
 
-(defn traverse
-  ([x path position]
-   (->> (conj (vec position) path)
-        (traverse* x))))
+(defn traverse [x path position]
+  (let [pull-path (remove #{"."} (apply concat (conj (vec position) path)))
+        lambda-path (list (last path))
+        found (or (proto/traverse x pull-path)
+                  (proto/traverse x lambda-path))]
+    (cond-> found
+      (proto/found-key? found) (.value))))

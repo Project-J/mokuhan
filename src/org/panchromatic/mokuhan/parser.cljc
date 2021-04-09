@@ -70,22 +70,24 @@ rest = #'(.|\\r?\\n)*$'"))
           (reduce-kv #(conj %1 %2 %3) [])
           (apply insta/parse parser mustache)))))
 
-(defn- invisible-rightside-children-whitespaces [loc]
+(defn invisible-rightside-children-whitespaces [loc]
   (if (zip/down loc)
-    (loop [loc (some-> loc zip/down zip/rightmost)]
-      (if (and loc (ast/whitespace? (zip/node loc)))
-        (-> (zip/edit loc ast/to-invisible)
+    (loop [loc' (some-> loc zip/down zip/rightmost)]
+      (if (and loc' (ast/whitespace? (zip/node loc')))
+        (-> (zip/edit loc' ast/to-invisible)
             zip/left
             recur)
-        (zip/up loc)))
+        loc))
     loc))
 
-(defn- copy-left-whitespaces [loc]
+(defn copy-left-whitespaces [loc]
   (loop [loc (zip/left loc)
          whitespaces []]
-    (if (ast/whitespace? (zip/node loc))
-      (recur (zip/left loc) (conj whitespaces (zip/node loc)))
-      whitespaces)))
+    (if loc
+      (if (ast/whitespace? (zip/node loc))
+        (recur (zip/left loc) (conj whitespaces (zip/node loc)))
+        whitespaces)
+      [])))
 
 (defn parse
   ([mustache]
